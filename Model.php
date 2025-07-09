@@ -1,84 +1,9 @@
 <?php
 
-/**
- * Core Framework - ProfileModel
- *
- * @license    MIT (https://mit-license.org/)
- * @author     Louis Ouellet <louis@laswitchtech.com>
- */
-
 // Import additionnal class into the global namespace
 use \LaswitchTech\Core\Abstracts\Model;
 
 class ProfileModel extends Model {
-
-    /**
-     * Retrieve Profile's Details
-     *
-     * @param int $id
-     * @param string $username
-     * @return array
-     */
-    public function get(int $id, string $username): array
-    {
-        // Initialize the Objects
-        $objects = [];
-
-        // Retrieve the Events
-        $Query = $this->Database->query()
-            ->table('events')
-            ->select('*')
-            ->join('owner', 'users', 'username')
-            ->filter()
-            ->where('owner', $username)
-            ->filter('OR')
-            ->where('message', '%'.$username.'%', 'LIKE')
-            ->filter('OR')
-            ->where('targetTable', 'users')
-            ->where('targetId', $id)
-            ->index('id');
-        $objects['events'] = $Query->result();
-
-        // Retrieve the Files
-        $Query = $this->Database->query()
-            ->table('files')
-            ->select('*')
-            ->join('owner', 'users', 'username')
-            ->filter()
-            ->where('targetTable', 'users')
-            ->where('targetId', $id)
-            ->index('id');
-        $objects['files'] = $Query->result();
-
-        // Retrieve the Notes
-        $Query = $this->Database->query()
-            ->table('notes')
-            ->select('*')
-            ->join('owner', 'users', 'username')
-            ->filter()
-            ->where('targetTable', 'users')
-            ->where('targetId', $id)
-            ->index('id');
-        foreach($Query->result() as $note){
-            $note['sharedWith'] = json_decode($note['sharedWith'] ?? '[]', true);
-            $objects['notes'][$note['id']] = $note;
-        }
-
-        // Retrieve the Contacts
-        $Query = $this->Database->query()
-            ->table('contacts')
-            ->select('*')
-            ->join('owner', 'users', 'username')
-            ->join('vcard', 'vcards', 'id')
-            ->filter()
-            ->where('targetTable', 'users')
-            ->where('targetId', $id)
-            ->index('id');
-        $objects['contacts'] = $Query->result();
-
-        // Return the objects
-        return $objects;
-    }
 
     /**
      * Retrieve a Profile's Avatar

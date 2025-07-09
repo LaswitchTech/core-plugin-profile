@@ -1,19 +1,17 @@
-<!--
-  Core Framework - View File
-
-  @license    MIT (https://mit-license.org/)
-  @author     Louis Ouellet <louis@laswitchtech.com>
--->
 <div class="col-12" id="layout"></div>
 <script>
     $(document).ready(function(){
 
         // Ajax Request
         $.ajax({
-            url: '/endpoint.php/profile/fetch',
+            url: '/api/profile/fetch',
             type: 'GET',dataType: 'json',
             success: function(response) {
-                console.log(response);
+
+                // Configure Storage
+                builder.Storage.setKey('profile');
+                builder.Storage.set(response);
+                console.log(builder.Storage.get())
 
                 // Set the element
                 var element = $('#layout');
@@ -24,7 +22,7 @@
                 element.col2 = $(document.createElement('div')).addClass('col-12 col-md-6 col-lg-8').appendTo(element.row);
 
                 var contacts = [];
-                for(const [key, value] of Object.entries(response.objects.contacts ?? {})){
+                for(const [key, value] of Object.entries(response.dependencies.contacts ?? {})){
                     var text = value.vcard.name;
                     if(value.vcard.title != null){
                         text += ' - ' + value.vcard.title;
@@ -51,7 +49,7 @@
                             "class": "rounded-circle",
                             "src": '/avatar?username=<?= $this->Auth->user()->username ?>&size=256',
                             "data-type": "avatar",
-                            "data-vcard": response.vcards.user.id,
+                            "data-vcard": response.record.vcard.id,
                             "style": "max-height: 250px; max-width: 250px; height: 250px; width: 250px; object-fit: contain; object-position: center;",
                         }).appendTo(component.body.avatar);
                         component.body.avatar.btn = $(document.createElement('button')).attr({
@@ -60,31 +58,31 @@
                             "style": "transition: all 0.5s ease-in-out; height: 48px!important; width: 48px!important; bottom: 8px; right: 8px;",
                         }).html('<i class="bi bi-upload"></i>').appendTo(component.body.avatar);
                         component.body.avatar.btn.click(function(){
-                            vCardModalAvatar(response.vcards.user);
+                            vCardModalAvatar(response.record.vcard);
                         });
 
                         // Insert the user's name
                         component.body.name = $(document.createElement('div')).addClass('position-relative mt-2 text-center').appendTo(component.body);
-                        component.body.name.string = $(document.createElement('h2')).addClass('fw-lighter m-0').text(response.vcards.user.name).appendTo(component.body.name);
+                        component.body.name.string = $(document.createElement('h2')).addClass('fw-lighter m-0').text(response.record.vcard.name).appendTo(component.body.name);
                         component.body.name.btn = $(document.createElement('button')).attr({
                             "type": "button",
                             "class": "btn btn-sm btn-warning fs-5 rounded-circle position-absolute",
                             "style": "transition: all 0.5s ease-in-out; height: 48px!important; width: 48px!important; top: calc(50% - 24px); right: -56px;",
                         }).html('<i class="bi bi-pencil"></i>').appendTo(component.body.name);
                         component.body.name.btn.click(function(){
-                            vCardModalEdit(response.vcards.user);
+                            vCardModalEdit(response.record.vcard);
                         });
 
                         // Insert the user's organization
                         component.body.organization = $(document.createElement('div')).addClass('position-relative mt-2 text-center').appendTo(component.body);
-                        component.body.organization.string = $(document.createElement('h4')).addClass('fw-lighter m-0').text(response.vcards.organization.name).appendTo(component.body.organization);
+                        component.body.organization.string = $(document.createElement('h4')).addClass('fw-lighter m-0').text(response.record.organization.vcard.name).appendTo(component.body.organization);
                         component.body.organization.btn = $(document.createElement('button')).attr({
                             "type": "button",
                             "class": "btn btn-sm btn-primary fs-5 rounded-circle position-absolute",
                             "style": "transition: all 0.5s ease-in-out; height: 48px!important; width: 48px!important; top: calc(50% - 24px); right: -56px;",
                         }).html('<i class="bi bi-person-vcard"></i>').appendTo(component.body.organization);
                         component.body.organization.btn.click(function(){
-                            vCardModal(response.vcards.organization.id);
+                            vCardModal(response.record.organization.vcard.id);
                         });
                     },
                 );
@@ -100,18 +98,6 @@
                     },
                     function(tabs,card){
                         card._component.body.removeClass('card-body');
-                        // tabs.add(
-                        //     'activities',
-                        //     {
-                        //         icon: "activity",
-                        //         label: builder.Locale.get("Activity"),
-                        //     },
-                        //     function(tab,nav){
-                        //         tab.addClass('px-4 py-3');
-                        //         card.activities = tab;
-                        //         EventFeed(response.objects.events ?? {}, tab);
-                        //     },
-                        // );
                         tabs.add(
                             'contacts',
                             {
@@ -120,16 +106,16 @@
                             },
                             function(tab,nav){
                                 card.contacts = tab;
-                                ContactsFeed(response.objects.contacts ?? {}, tab, {
-                                    "address": response.vcards.user.address,
-                                    "city": response.vcards.user.city,
-                                    "country": response.vcards.user.country,
-                                    "state": response.vcards.user.state,
-                                    "zipcode": response.vcards.user.zipcode,
-                                    "locale": response.vcards.user.locale,
-                                    "phone": response.vcards.user.phone,
+                                ContactsFeed(response.dependencies.contacts ?? {}, tab, {
+                                    "address": response.record.vcard.address,
+                                    "city": response.record.vcard.city,
+                                    "country": response.record.vcard.country,
+                                    "state": response.record.vcard.state,
+                                    "zipcode": response.record.vcard.zipcode,
+                                    "locale": response.record.vcard.locale,
+                                    "phone": response.record.vcard.phone,
                                     "targetTable": "users",
-                                    "targetId": response.id,
+                                    "targetId": response.record.id,
                                 });
                             },
                         );
@@ -141,7 +127,32 @@
                             },
                             function(tab,nav){
                                 card.notes = tab;
-                                NotesFeed(response.objects.notes ?? {}, tab, 'users', response.id);
+                                NotesFeed(builder.Storage.get('dependencies:notes') ?? {}, tab, 'users', response.record.id);
+                            },
+                        );
+                        tabs.add(
+                            'activities',
+                            {
+                                icon: "activity",
+                                label: builder.Locale.get("Activity"),
+                            },
+                            function(tab,nav){
+                                tab.addClass('px-4 py-3');
+                                card.activities = tab;
+                                EventFeed(builder.Storage.get('dependencies:event') ?? {}, tab);
+                            },
+                        );
+                        tabs.add(
+                            'related',
+                            {
+                                icon: "diagram-2",
+                                label: builder.Locale.get("Related"),
+                            },
+                            function(tab,nav){
+                                tab.addClass('px-4 py-3');
+                                RelationshipFeed(builder.Storage.getKey(), tab, function(feed){
+                                    // card.related.feed = feed;
+                                });
                             },
                         );
                     },
