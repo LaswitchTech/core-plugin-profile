@@ -99,6 +99,17 @@
                     function(tabs,card){
                         card._component.body.removeClass('card-body');
                         tabs.add(
+                            'notes',
+                            {
+                                icon: "stickies",
+                                label: builder.Locale.get("Notes"),
+                            },
+                            function(tab,nav){
+                                card.notes = tab;
+                                NotesFeed(builder.Storage.get('dependencies:notes') ?? {}, tab, 'users', response.record.id);
+                            },
+                        );
+                        tabs.add(
                             'contacts',
                             {
                                 icon: "person-vcard",
@@ -117,17 +128,6 @@
                                     "targetTable": "users",
                                     "targetId": response.record.id,
                                 });
-                            },
-                        );
-                        tabs.add(
-                            'notes',
-                            {
-                                icon: "stickies",
-                                label: builder.Locale.get("Notes"),
-                            },
-                            function(tab,nav){
-                                card.notes = tab;
-                                NotesFeed(builder.Storage.get('dependencies:notes') ?? {}, tab, 'users', response.record.id);
                             },
                         );
                         tabs.add(
