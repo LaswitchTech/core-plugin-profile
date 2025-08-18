@@ -32,6 +32,14 @@
                         'alt': 'Avatar',
                         'src': '/avatar?username=' + record.username
                     }).appendTo(element.details);
+                    element.details.avatar.hover(
+                        function(){
+                            element.details.avatar.addClass('border-primary');
+                        },
+                        function(){
+                            element.details.avatar.removeClass('border-primary');
+                        },
+                    );
                     element.details.avatar.click(function(){
                         builder.Widget('vcard',{mode:'upload',data: record.vcard.id});
                     });
@@ -93,31 +101,6 @@
 
                                 // Add the Notes tab
                                 tabs.add(
-                                    'notes-widget',
-                                    {
-                                        icon: "stickies",
-                                        label: builder.Locale.get("Notes - Widget"),
-                                    },
-                                    function(tab,nav){
-                                        card.notes = tab;
-                                        // tab.addClass('card-body');
-                                        builder.Widget(
-                                            'notes',
-                                            tab,
-                                            {
-                                                data: notes ?? {},
-                                                targetTable: table,
-                                                targetId: record.id,
-                                            },
-                                            function(widget, component){
-                                                console.log(widget, component);
-                                            },
-                                        )
-                                    },
-                                );
-
-                                // Add the Notes tab
-                                tabs.add(
                                     'notes',
                                     {
                                         icon: "stickies",
@@ -125,7 +108,7 @@
                                     },
                                     function(tab,nav){
                                         card.notes = tab;
-                                        NotesFeed(notes ?? [], tab, table, record.id);
+                                        builder.Widget('notes',tab,{data: notes ?? {},targetTable: table,targetId: record.id})
                                     },
                                 );
                             <?php endif; ?>
