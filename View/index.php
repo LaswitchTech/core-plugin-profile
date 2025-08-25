@@ -32,14 +32,6 @@
                         'alt': 'Avatar',
                         'src': '/avatar?username=' + record.username
                     }).appendTo(element.details);
-                    element.details.avatar.hover(
-                        function(){
-                            element.details.avatar.addClass('border-primary');
-                        },
-                        function(){
-                            element.details.avatar.removeClass('border-primary');
-                        },
-                    );
                     element.details.avatar.click(function(){
                         builder.Widget('vcard',{mode:'upload',data: record.vcard.id});
                     });
