@@ -1,4 +1,4 @@
-<div class="col-12" id="layout"></div>
+<article class="profile" id="layout"></article>
 <script>
     (async function () {
         await builder.Storage._ensureReady?.();
@@ -15,73 +15,55 @@
                     await builder.Storage.set(response);
                     console.log(await builder.Storage.get());
 
+                    // Retrieve the record
+                    let record = await builder.Storage.get('record');
+
                     // Set the element
                     var element = $('#layout');
 
                     // Setup the layout
-                    element.row = $(document.createElement('div')).addClass('row').appendTo(element);
-                    element.col1 = $(document.createElement('div')).addClass('col-12 col-md-6 col-lg-4').appendTo(element.row);
-                    element.col2 = $(document.createElement('div')).addClass('col-12 col-md-6 col-lg-8').appendTo(element.row);
+                    element.row = $(document.createElement('div')).appendTo(element);
+                    element.details = $(document.createElement('div')).addClass('profile-details').appendTo(element.row);
+                    element.col2 = $(document.createElement('div')).appendTo(element.row);
 
-                    // Create the Profile Card
-                    const Details = builder.Component(
-                        "card",
-                        element.col1,
-                        {
-                            icon: "person",
-                            title: builder.Locale.get('Details'),
-                        },
-                        async function(card,component){
-
-                            // Retrieve the record
-                            let record = await builder.Storage.get('record');
-
-                            // Styling
-                            component.body.addClass('d-flex flex-column justify-content-center align-items-center');
-
-                            // Insert the user's profile picture
-                            component.body.avatar = $(document.createElement('div')).addClass('rounded-circle border border-3 border-light d-flex justify-content-center align-items-center position-relative').css({"height": "256px", "width": "256px"}).appendTo(component.body);
-                            component.body.avatar.img = $(document.createElement('img')).attr({
-                                "class": "rounded-circle",
-                                "src": '/avatar?username=<?= $this->Auth->user()->username ?>&size=256',
-                                "data-type": "avatar",
-                                "data-vcard": record.vcard.id,
-                                "style": "max-height: 250px; max-width: 250px; height: 250px; width: 250px; object-fit: contain; object-position: center;",
-                            }).appendTo(component.body.avatar);
-                            component.body.avatar.btn = $(document.createElement('button')).attr({
-                                "type": "button",
-                                "class": "btn btn-sm btn-info fs-5 rounded-circle position-absolute",
-                                "style": "transition: all 0.5s ease-in-out; height: 48px!important; width: 48px!important; bottom: 8px; right: 8px;",
-                            }).html('<i class="bi bi-upload"></i>').appendTo(component.body.avatar);
-                            component.body.avatar.btn.click(function(){
-                                vCardModalAvatar(record.vcard);
-                            });
-
-                            // Insert the user's name
-                            component.body.name = $(document.createElement('div')).addClass('position-relative mt-2 text-center').appendTo(component.body);
-                            component.body.name.string = $(document.createElement('h2')).addClass('fw-lighter m-0').text(record.vcard.name).appendTo(component.body.name);
-                            component.body.name.btn = $(document.createElement('button')).attr({
-                                "type": "button",
-                                "class": "btn btn-sm btn-warning fs-5 rounded-circle position-absolute",
-                                "style": "transition: all 0.5s ease-in-out; height: 48px!important; width: 48px!important; top: calc(50% - 24px); right: -56px;",
-                            }).html('<i class="bi bi-pencil"></i>').appendTo(component.body.name);
-                            component.body.name.btn.click(function(){
-                                vCardModalEdit(record.vcard);
-                            });
-
-                            // Insert the user's organization
-                            component.body.organization = $(document.createElement('div')).addClass('position-relative mt-2 text-center').appendTo(component.body);
-                            component.body.organization.string = $(document.createElement('h4')).addClass('fw-lighter m-0').text(record.organization.vcard.name).appendTo(component.body.organization);
-                            component.body.organization.btn = $(document.createElement('button')).attr({
-                                "type": "button",
-                                "class": "btn btn-sm btn-primary fs-5 rounded-circle position-absolute",
-                                "style": "transition: all 0.5s ease-in-out; height: 48px!important; width: 48px!important; top: calc(50% - 24px); right: -56px;",
-                            }).html('<i class="bi bi-person-vcard"></i>').appendTo(component.body.organization);
-                            component.body.organization.btn.click(function(){
-                                vCardModal(record.organization.vcard.id);
-                            });
-                        },
-                    );
+                    // Create User Block
+                    element.details.avatar = $(document.createElement('img')).attr({
+                        'class': 'avatar cursor-pointer',
+                        'alt': 'Avatar',
+                        'src': '/avatar?username=' + record.username
+                    }).appendTo(element.details);
+                    element.details.avatar.click(function(){
+                        builder.Widget('vcard',{mode:'upload',data: record.vcard.id});
+                    });
+                    element.details.meta = $(document.createElement('div')).addClass('meta').appendTo(element.details);
+                    element.details.meta.username = $(document.createElement('button')).attr({
+                        'class': 'username btn btn-link text-decoration-none',
+                        'type': 'button'
+                    }).text(record.vcard.name ?? record.username).appendTo(element.details.meta);
+                    element.details.meta.username.click(function(){
+                        builder.Widget('vcard',{data: record.vcard.id});
+                    });
+                    element.details.meta.organization = $(document.createElement('button')).attr({
+                        'class': 'organization btn btn-link text-decoration-none',
+                        'type': 'button'
+                    }).text(record.organization.vcard.name).appendTo(element.details.meta);
+                    element.details.meta.organization.click(function(){
+                        builder.Widget('vcard',{data: record.organization.vcard.id});
+                    });
+                    element.details.meta.metadata = $(document.createElement('div')).addClass('metadata').appendTo(element.details.meta);
+                    element.details.meta.metadata.icon = $(document.createElement('i')).addClass('bi bi-clock me-1').appendTo(element.details.meta.metadata);
+                    element.details.meta.metadata.timeago = $(document.createElement('time')).attr({
+                        'class': 'timeago',
+                        'datetime': record.created ?? new Date().toISOString(),
+                    }).appendTo(element.details.meta.metadata);
+                    const created = new Date(record.created ?? new Date().toISOString());
+                    element.details.meta.metadata.timeago.attr({
+                        'title': created.toLocaleString(),
+                        'data-bs-toggle': 'tooltip',
+                        'data-bs-title': created.toLocaleString(),
+                    });
+                    new bootstrap.Tooltip(element.details.meta.metadata.timeago);
+                    element.details.meta.metadata.timeago.timeago();
 
                     // Create a Tabs component
                     const Tabs = builder.Component(
@@ -101,6 +83,7 @@
                             let table = 'users'
 
                             // Styling
+                            card.tabs = {};
                             card._component.body.removeClass('card-body');
 
                             // Notes
@@ -117,8 +100,8 @@
                                         label: builder.Locale.get("Notes"),
                                     },
                                     function(tab,nav){
-                                        card.notes = tab;
-                                        NotesFeed(notes ?? [], tab, table, record.id);
+                                        card.tabs.notes = tab;
+                                        builder.Widget('notes',tab,{data: notes ?? {},targetTable: table,targetId: record.id})
                                     },
                                 );
                             <?php endif; ?>
@@ -137,19 +120,8 @@
                                         label: builder.Locale.get("Contacts"),
                                     },
                                     function(tab,nav){
-                                        card.contacts = tab;
-                                        ContactsFeed(contacts ?? [], tab, {
-                                            "category": "Contact",
-                                            "address": record.vcard.address,
-                                            "city": record.vcard.city,
-                                            "country": record.vcard.country.code,
-                                            "state": record.vcard.state.code,
-                                            "zipcode": record.vcard.zipcode,
-                                            "locale": record.vcard.locale,
-                                            "phone": record.vcard.phone,
-                                            "targetTable": table,
-                                            "targetId": record.id,
-                                        });
+                                        card.tabs.contacts = tab;
+                                        builder.Widget("contacts",tab,{data: contacts ?? {},targetTable: table,targetId: record.id, default: record.vcard});
                                     },
                                 );
                             <?php endif; ?>
@@ -168,12 +140,8 @@
                                         label: builder.Locale.get("Files"),
                                     },
                                     function(tab,nav){
-                                        card.files = tab;
-                                        FilesFeed(files ?? [], tab, {
-                                            targetTable: table,
-                                            targetId: record.id,
-                                            isPublic: 1,
-                                        });
+                                        card.tabs.files = tab;
+                                        builder.Widget("files",tab,{data: files ?? {},targetTable: table,targetId: record.id,isPublic: 1});
                                     },
                                 );
                             <?php endif; ?>
@@ -186,38 +154,14 @@
 
                                 // Add the Event tab
                                 tabs.add(
-                                    'activities',
+                                    'event',
                                     {
                                         icon: "activity",
                                         label: builder.Locale.get("Activity"),
                                     },
                                     function(tab,nav){
-                                        tab.addClass('px-4 py-3');
-                                        card.activities = tab;
-                                        EventFeed(event ?? [], tab);
-                                    },
-                                );
-                            <?php endif; ?>
-
-                            // Relationship
-                            <?php if($this->Helper->Core->isInstalled('relationship')): ?>
-
-                                // Retrieve the relationship
-                                let relationship = await builder.Storage.get('dependencies:relationship');
-
-                                // Add the Relationship tab
-                                tabs.add(
-                                    'related',
-                                    {
-                                        icon: "diagram-2",
-                                        label: builder.Locale.get("Related"),
-                                    },
-                                    function(tab,nav){
-                                        tab.addClass('px-4 py-3');
-                                        card.related = tab;
-                                        RelationshipFeed(relationship, tab, table, record.id, function(feed){
-                                            card.related.feed = feed;
-                                        });
+                                        card.tabs.event = tab;
+                                        builder.Widget("events",tab,{data: event ?? {},targetTable: table,targetId: record.id});
                                     },
                                 );
                             <?php endif; ?>
