@@ -83,6 +83,7 @@
                             let table = 'users'
 
                             // Styling
+                            card.tabs = {};
                             card._component.body.removeClass('card-body');
 
                             // Notes
@@ -99,7 +100,7 @@
                                         label: builder.Locale.get("Notes"),
                                     },
                                     function(tab,nav){
-                                        card.notes = tab;
+                                        card.tabs.notes = tab;
                                         builder.Widget('notes',tab,{data: notes ?? {},targetTable: table,targetId: record.id})
                                     },
                                 );
@@ -119,19 +120,8 @@
                                         label: builder.Locale.get("Contacts"),
                                     },
                                     function(tab,nav){
-                                        card.contacts = tab;
-                                        ContactsFeed(contacts ?? [], tab, {
-                                            "category": "Contact",
-                                            "address": record.vcard.address,
-                                            "city": record.vcard.city,
-                                            "country": record.vcard.country.code,
-                                            "state": record.vcard.state.code,
-                                            "zipcode": record.vcard.zipcode,
-                                            "locale": record.vcard.locale,
-                                            "phone": record.vcard.phone,
-                                            "targetTable": table,
-                                            "targetId": record.id,
-                                        });
+                                        card.tabs.contacts = tab;
+                                        builder.Widget("contacts",tab,{data: contacts ?? {},targetTable: table,targetId: record.id, default: record.vcard});
                                     },
                                 );
                             <?php endif; ?>
@@ -150,12 +140,8 @@
                                         label: builder.Locale.get("Files"),
                                     },
                                     function(tab,nav){
-                                        card.files = tab;
-                                        FilesFeed(files ?? [], tab, {
-                                            targetTable: table,
-                                            targetId: record.id,
-                                            isPublic: 1,
-                                        });
+                                        card.tabs.files = tab;
+                                        builder.Widget("files",tab,{data: files ?? {},targetTable: table,targetId: record.id,isPublic: 1});
                                     },
                                 );
                             <?php endif; ?>
@@ -168,38 +154,14 @@
 
                                 // Add the Event tab
                                 tabs.add(
-                                    'activities',
+                                    'event',
                                     {
                                         icon: "activity",
                                         label: builder.Locale.get("Activity"),
                                     },
                                     function(tab,nav){
-                                        tab.addClass('px-4 py-3');
-                                        card.activities = tab;
-                                        EventFeed(event ?? [], tab);
-                                    },
-                                );
-                            <?php endif; ?>
-
-                            // Relationship
-                            <?php if($this->Helper->Core->isInstalled('relationship')): ?>
-
-                                // Retrieve the relationship
-                                let relationship = await builder.Storage.get('dependencies:relationship');
-
-                                // Add the Relationship tab
-                                tabs.add(
-                                    'related',
-                                    {
-                                        icon: "diagram-2",
-                                        label: builder.Locale.get("Related"),
-                                    },
-                                    function(tab,nav){
-                                        tab.addClass('px-4 py-3');
-                                        card.related = tab;
-                                        RelationshipFeed(relationship, tab, table, record.id, function(feed){
-                                            card.related.feed = feed;
-                                        });
+                                        card.tabs.event = tab;
+                                        builder.Widget("events",tab,{data: event ?? {},targetTable: table,targetId: record.id});
                                     },
                                 );
                             <?php endif; ?>
