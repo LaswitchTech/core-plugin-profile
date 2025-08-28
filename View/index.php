@@ -84,6 +84,7 @@
 
                             // Styling
                             card.tabs = {};
+                            card._component.addClass('profile-content');
                             card._component.body.removeClass('card-body');
 
                             // Notes
