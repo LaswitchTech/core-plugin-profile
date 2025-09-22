@@ -2,7 +2,7 @@
 <script>
     (function () {
         $(document).ready(function(){
-            builder.Layout('user',"#layout",{url: '/api/profile/fetch',disable: ['documents']});
+            builder.Layout('user',"#layout",{endpoint: '/profile/fetch',disable: ['documents']});
         });
     })();
 </script>
